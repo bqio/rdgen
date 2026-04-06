@@ -11,9 +11,9 @@ services:
     env_file:
       - .env
     volumes:
-      - ./exe:/opt/rdgen/exe
-      - ./png:/opt/rdgen/png
-      - ./temp_zips:/opt/rdgen/temp_zips
+      - /home/swarm_admin/rdgen/exe:/opt/rdgen/exe
+      - /home/swarm_admin/rdgen/png:/opt/rdgen/png
+      - /home/swarm_admin/rdgen/temp_zips:/opt/rdgen/temp_zips
     deploy:
       replicas: 1
       placement:
