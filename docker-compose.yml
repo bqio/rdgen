@@ -1,24 +1,35 @@
+networks:
+  traefik-public:
+    external: true
+
 services:
   rdgen:
-    # use bryangerlach/rdgen:latest for the latest build
-    #build: .
     image: bryangerlach/rdgen:latest
     restart: unless-stopped
-    environment:
-      SECRET_KEY: "django-insecure-!(t-!f#6g#sr%yfded9(xha)g+=!6craeez^cp+*&bz_7vdk61"
-      GHUSER: "github_username"
-      GHBEARER: "github_access_token"
-      GENURL: "accessible_url_of_server"
-      ZIP_PASSWORD: ""
-      GHBRANCH: "master"
-      PROTOCOL: "https"
-      REPONAME: "rdgen"
-      SH_SECRET: ""
-    ports:
-      - "8000:8000"
-    dns:
-      - 8.8.8.8
+    networks:
+      - traefik-public
+    env_file:
+      - .env
     volumes:
       - ./exe:/opt/rdgen/exe
       - ./png:/opt/rdgen/png
       - ./temp_zips:/opt/rdgen/temp_zips
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.rdgen == true
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.http.routers.rdgen.rule=Host(`rdgen.itv34.ru`)'
+        - 'traefik.http.routers.rdgen.entrypoints=http'
+        - 'traefik.http.routers.rdgen.middlewares=https-redirect'
+        - 'traefik.http.routers.rdgen-https.rule=Host(`rdgen.itv34.ru`)'
+        - 'traefik.http.routers.rdgen-https.entrypoints=https'
+        - 'traefik.http.routers.rdgen-https.tls=true'
+        - 'traefik.http.routers.rdgen-https.tls.certresolver=le'
+        - 'traefik.docker.network=traefik-public'
+        - 'traefik.constraint-label=traefik-public'
+        - 'traefik.http.services.rdgen-https.loadbalancer.server.port=8000'
+
